@@ -1,32 +1,38 @@
 #include "graph.hh"
 #include <iostream>
 #include <immintrin.h>
+#include <avx512fintrin.h>
 
 #define THREAD_NUM 128
+#define SIMD_WIDTH 16
+#define MAX_VNUM 4096
+
+__m512i k_cache[MAX_VNUM / SIMD_WIDTH];
+
+inline void init_k_cache(int *line, int vertex_num_) {
+#pragma omp parallel for schedule(static)
+    for (int i = 0; i < vertex_num_ / SIMD_WIDTH; ++i) {
+        k_cache[i] = _mm512_loadu_si512(line + i * SIMD_WIDTH);
+    }
+}
 
 Graph Graph::apsp() {
     Graph result(*this);
-    int stride_i = vertex_num_ / THREAD_NUM / 2;
+    int stride_i = vertex_num_ / THREAD_NUM;
     for (int k = 0; k < vertex_num_; ++k) {
+        init_k_cache(&result(k, 0), vertex_num_);
+
 #pragma omp parallel for schedule(static)
         for (int i = 0; i < vertex_num_; i += stride_i) {
             for (int ii = i; ii < i + stride_i; ++ii) {
                 __m512i tmp3 = _mm512_set1_epi32(result(ii, k));
-                int blk_simd = 16; // 512 / 32 == 16
+                static constexpr int blk_simd = SIMD_WIDTH; // 512 / 32 == 16
                 for (int j = 0; j < vertex_num_; j += blk_simd) {
-                    __m512i tmp2 = _mm512_loadu_si512((__m512i *) &result(k, j));
+                    __m512i tmp2 = k_cache[j / blk_simd];
                     __m512i tmp4 = _mm512_add_epi32(tmp2, tmp3);
                     _mm512_storeu_si512((__m512i *) &result(ii, j), _mm512_min_epi32(tmp4, _mm512_loadu_si512((__m512i *) &result(ii, j))));
                     // result(ii, j) = std::min(result(ii, j), tmp1 + result(k, j));
                 }
-                // __m256i tmp3 = _mm256_set1_epi32(result(ii, k));
-                // int blk_simd = 8; // 256 / 32 == 8
-                // for (int j = 0; j < vertex_num_; j += blk_simd) {
-                //     __m256i tmp2 = _mm256_loadu_si256((__m256i *) &result(k, j));
-                //     __m256i tmp4 = _mm256_add_epi32(tmp2, tmp3);
-                //     _mm256_storeu_si256((__m256i *) &result(ii, j), _mm256_min_epi32(tmp4, _mm256_loadu_si256((__m256i *) &result(ii, j))));
-                //     // result(ii, j) = std::min(result(ii, j), tmp1 + result(k, j));
-                // }
             }
         }
     }

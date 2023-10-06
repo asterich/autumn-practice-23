@@ -41,4 +41,4 @@ add_library(avx INTERFACE IMPORTED)
 target_compile_options(apsp_opt PRIVATE -mavx -mavx2 -mavx512f)
 
 
-target_compile_options(apsp_opt PRIVATE -Ofast)
+target_compile_options(apsp_opt PRIVATE -Ofast -g)
