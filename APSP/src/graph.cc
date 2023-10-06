@@ -38,6 +38,7 @@ bool Graph::operator==(const Graph& g) const {
     if (vertex_num_ != g.vertex_num_) {
         return false;
     }
+#pragma omp parallel for schedule(static)
     for (int i = 0; i < vertex_num_ * vertex_num_; ++i) {
         if (Distance_[i] != g.Distance_[i]) {
             return false;
