@@ -38,7 +38,7 @@ set_target_properties(${TARGET} PROPERTIES
 COMPILE_FLAGS "-pthread"
 LINK_FLAGS "-pthread")
 add_library(avx INTERFACE IMPORTED)
-target_compile_options(apsp_opt PRIVATE -mavx)
+target_compile_options(apsp_opt PRIVATE -mavx -mavx2 -mavx512f)
 
 
 target_compile_options(apsp_opt PRIVATE -Ofast)

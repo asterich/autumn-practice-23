@@ -1,3 +1,4 @@
 .vscode/
 build/
 APSP/.cache/
+APSP/compile_commands.json
