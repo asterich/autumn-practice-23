@@ -59,39 +59,10 @@ void apsp_in_block0(int *g1, int *g2, int *g3, int blk_size,
             }
         }
     }
-//     for (int k = 0; k < blk_size; k++) {
-//         int kth = k * vertex_num_;
-//         for (int i = 0; i < blk_size; i++) {
-// #pragma omp simd
-// #pragma unroll
-//             for (int j = 0; j < blk_size; j++) {
-//                 int sum = g2[i * vertex_num_ + k] + g3[kth + j];
-//                 if (g1[i * vertex_num_ + j] > sum) {
-//                     g1[i * vertex_num_ + j] = sum;
-//                 }
-//             }
-//         }
-//     }
 }
 
 void apsp_in_block1(int *g1, int *g2, int *g3, int blk_size,
                     int vertex_num_) {
-//     for (int k = 0; k < blk_size; ++k) {
-//         int kth = k * vertex_num_;
-//         for (int i = 0; i < blk_size; i += 1) {
-//             __m512i tmp3 = _mm512_set1_epi32(g2[i * vertex_num_ + k]);
-//             int blk_simd = 16; // 512 / 32 == 16
-// #pragma unroll
-//             for (int j = 0; j < blk_size; j += blk_simd) {
-//                 __m512i tmp2 = _mm512_loadu_si512((__m512i *) &g3[kth + j]);
-//                 __m512i tmp4 = _mm512_add_epi32(tmp2, tmp3);
-//                 tmp2 = _mm512_loadu_si512((__m512i *) &g1[i * vertex_num_ + j]);
-//                 tmp4 = _mm512_min_epi32(tmp4, tmp2);
-//                 _mm512_storeu_si512((__m512i *)&g1[i * vertex_num_ + j],  tmp4);
-//                 // g1(i, j) = std::min(g1(i, j), g2(i, k) + g3(k, j));
-//             }
-//         }
-//     }
     for (int k = 0; k < blk_size; k++) {
         int kth = k * vertex_num_;
         for (int i = 0; i < blk_size; i++) {
