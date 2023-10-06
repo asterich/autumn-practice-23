@@ -78,8 +78,26 @@ void apsp_in_block1(int *g1, int *g2, int *g3, int blk_size,
     }
 }
 
+void apsp_in_block1_kk(int *g1, int *g2, int *g3, int blk_size,
+                    int vertex_num_) {
+    for (int k = 0; k < blk_size; k++) {
+        int kth = k * vertex_num_;
+#pragma omp parallel for schedule(dynamic)
+        for (int i = 0; i < blk_size; i++) {
+#pragma omp simd
+#pragma unroll
+            for (int j = 0; j < blk_size; j++) {
+                int sum = g2[i * vertex_num_ + k] + g3[kth + j];
+                if (g1[i * vertex_num_ + j] > sum) {
+                    g1[i * vertex_num_ + j] = sum;
+                }
+            }
+        }
+    }
+}
+
 void apsp_top_level(Graph &g, int vertex_num_) {
-    int block_sz = 128;
+    int block_sz = 32;
     int block_num = vertex_num_ / block_sz;
     for (int k = 0; k < block_num; ++k) {
         apsp_in_block1(
