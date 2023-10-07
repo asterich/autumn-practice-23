@@ -105,38 +105,42 @@ void apsp_top_level(Graph &g, int vertex_num_) {
             &g(k * block_sz, k * block_sz), 
             &g(k * block_sz, k * block_sz), 
             block_sz, vertex_num_);
-#pragma omp parallel for schedule(dynamic)
-        for (int j = 0; j < block_num; ++j) {
-            int offs_j = j * block_sz;
-            if (j != k)
-                apsp_in_block1(
-                    &g(k * block_sz, j * block_sz), 
-                    &g(k * block_sz, k * block_sz), 
-                    &g(k * block_sz, j * block_sz), 
-                    block_sz, vertex_num_);
-        }
-#pragma omp parallel for schedule(dynamic)
-        for (int i = 0; i < block_num; ++i) {
-            int offs_i = i * block_sz;
-            if (i != k)
-                apsp_in_block1(
-                    &g(i * block_sz, k * block_sz), 
-                    &g(i * block_sz, k * block_sz), 
-                    &g(k * block_sz, k * block_sz), 
-                    block_sz, vertex_num_);
-        }
-#pragma omp parallel for schedule(dynamic)
-        for (int i = 0; i < block_num; ++i) {
+#pragma omp parallel
+        {
+#pragma omp for nowait
             for (int j = 0; j < block_num; ++j) {
-                int offs_i = i * block_sz;
                 int offs_j = j * block_sz;
-                if (i != k && j != k)
+                if (j != k)
                     apsp_in_block1(
-                        &g(i * block_sz, j * block_sz), 
-                        &g(i * block_sz, k * block_sz), 
+                        &g(k * block_sz, j * block_sz), 
+                        &g(k * block_sz, k * block_sz), 
                         &g(k * block_sz, j * block_sz), 
                         block_sz, vertex_num_);
             }
+#pragma omp for nowait
+            for (int i = 0; i < block_num; ++i) {
+                int offs_i = i * block_sz;
+                if (i != k)
+                    apsp_in_block1(
+                        &g(i * block_sz, k * block_sz), 
+                        &g(i * block_sz, k * block_sz), 
+                        &g(k * block_sz, k * block_sz), 
+                        block_sz, vertex_num_);
+            }
+#pragma omp for nowait
+            for (int i = 0; i < block_num; ++i) {
+                for (int j = 0; j < block_num; ++j) {
+                    int offs_i = i * block_sz;
+                    int offs_j = j * block_sz;
+                    if (i != k && j != k)
+                        apsp_in_block1(
+                            &g(i * block_sz, j * block_sz), 
+                            &g(i * block_sz, k * block_sz), 
+                            &g(k * block_sz, j * block_sz), 
+                            block_sz, vertex_num_);
+                }
+            }
         }
     }
+
 }
